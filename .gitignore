@@ -4,3 +4,5 @@ faiss_index/
 temp.pdf
 __pycache__/
 *.pyc
+
+instruction_to_run
