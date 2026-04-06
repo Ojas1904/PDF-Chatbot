@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="DocMind — AI-powered document Q&A agent. Upload PDFs and PowerPoint files, ask questions, get intelligent answers with citations.">
+  <title>DocMind — AI Document Agent</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js"></script>
+</head>
+<body>
+  
+  <!-- Interactive 3D Background -->
+  <div id="vanta-bg" class="vanta-bg"></div>
+
+  <!-- Drag & drop overlay (global) -->
+  <div id="dropOverlay" class="drop-overlay">
+    <div class="drop-overlay-content">
+      <div class="drop-icon">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+      </div>
+      <h2>Drop your file here</h2>
+      <p>PDF, PPT, or PPTX</p>
+    </div>
+  </div>
+
+  <!-- Landing Page State -->
+  <div id="landingPage" class="landing-page active">
+    <!-- Brand -->
+    <div class="landing-brand">
+      <span class="brand-icon">🧠</span>
+      <span class="brand-text">Doc<span class="brand-accent">Mind</span></span>
+    </div>
+    
+    <!-- Hero Content -->
+    <div class="hero-content">
+      <h1 class="hero-title">Experience documents in a <br><span class="hero-gradient">new dimension.</span></h1>
+      <p class="hero-subtitle">Upload complex PDFs and PowerPoints. Instantly unlock deep insights, automatic context chunking, and vision extraction powered by Gemini AI.</p>
+      
+      <!-- Landing Upload Zone -->
+      <div id="landingUploadZone" class="landing-upload-zone">
+        <div class="landing-upload-inner">
+          <div class="landing-upload-icon">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <h3>Drag & drop to initialize</h3>
+          <p>Supports .PDF, .PPT, .PPTX (Processed securely in browser)</p>
+          <button class="landing-browse-btn" onclick="document.getElementById('landingFileInput').click()">
+            Browse Files
+          </button>
+          <input type="file" id="landingFileInput" accept=".pdf,.ppt,.pptx" hidden>
+        </div>
+      </div>
+
+       <!-- Landing Progress Container -->
+      <div id="landingProgressContainer" class="landing-progress-container" style="display:none;">
+        <div class="lp-header">
+          <span class="lp-file" id="lpFileName">Loading...</span>
+          <span class="lp-percent" id="lpPercent">0%</span>
+        </div>
+        <div class="lp-track">
+          <div id="lpFill" class="lp-fill"></div>
+        </div>
+        <div class="lp-status" id="lpStatusText">Initializing engine...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- App State (Chat Interface) -->
+  <div id="app" class="app-container" style="display: none; opacity: 0; transition: opacity 0.6s ease;">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-inner">
+        <!-- Brand -->
+        <div class="sidebar-brand">
+          <div class="brand-logo">
+            <span class="brand-icon">🧠</span>
+            <span class="brand-text">Doc<span class="brand-accent">Mind</span></span>
+          </div>
+          <button id="sidebarClose" class="sidebar-close" aria-label="Close sidebar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <!-- Upload button -->
+        <div class="sidebar-upload">
+          <label id="uploadBtn" class="upload-btn" for="fileInput">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Upload Document</span>
+          </label>
+          <input type="file" id="fileInput" accept=".pdf,.ppt,.pptx" hidden>
+        </div>
+
+        <!-- Documents list -->
+        <div class="sidebar-section">
+          <div class="section-header">
+            <span class="section-title">Documents</span>
+            <span id="docCount" class="section-badge">0</span>
+          </div>
+          <div id="documentList" class="document-list">
+            <div class="empty-docs">
+              <span class="empty-docs-icon">📂</span>
+              <span class="empty-docs-text">No documents yet</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Image gallery -->
+        <div id="imageGallerySection" class="sidebar-section" style="display:none;">
+          <div class="section-header">
+            <span class="section-title">Extracted Images</span>
+            <span id="imageCount" class="section-badge">0</span>
+          </div>
+          <div id="imageGallery" class="image-gallery"></div>
+        </div>
+
+        <!-- File metadata -->
+        <div id="fileMetaSection" class="sidebar-section" style="display:none;">
+          <div class="section-header">
+            <span class="section-title">File Info</span>
+          </div>
+          <div id="fileMeta" class="file-meta"></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main-content">
+      <!-- Top bar -->
+      <header class="topbar">
+        <button id="menuBtn" class="menu-btn" aria-label="Toggle sidebar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div id="topbarStatus" class="topbar-status">
+          <div class="status-dot status-idle"></div>
+          <span>Ready</span>
+        </div>
+        <div class="topbar-actions" style="display: flex; gap: 12px; align-items: center;">
+          <button id="themeToggle" class="theme-btn" aria-label="Toggle theme">
+            <svg class="sun-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            <svg class="moon-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </button>
+          <button id="clearBtn" class="clear-btn" title="Clear conversation">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <span>Clear</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Chat area -->
+      <div id="chatArea" class="chat-area">
+        <!-- Empty state / Upload zone -->
+        <!-- We keep this inner empty state for when they delete all docs inside the app -->
+        <div id="emptyState" class="empty-state">
+          <div class="empty-state-content">
+            <h1 class="empty-title">Doc<span class="brand-accent">Mind</span> Engine Ready</h1>
+            <p class="empty-subtitle">Upload another PDF or PowerPoint to continue</p>
+            
+            <div id="uploadZone" class="upload-zone">
+              <div class="upload-zone-inner">
+                <div class="upload-zone-icon">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                </div>
+              </div>
+              <input type="file" id="uploadZoneInput" accept=".pdf,.ppt,.pptx" hidden>
+            </div>
+
+            <!-- Progress bar inside chat (hidden) -->
+            <div id="progressContainer" class="progress-container" style="display:none;">
+              <div class="progress-header">
+                <span id="progressIcon" class="progress-file-icon">📄</span>
+                <span id="progressFileName" class="progress-file-name"></span>
+              </div>
+              <div class="progress-track">
+                <div id="progressFill" class="progress-fill"></div>
+              </div>
+              <span id="progressStatus" class="progress-status">Initializing...</span>
+            </div>
+
+            <!-- Suggestion chips -->
+            <div class="suggestion-area">
+              <div class="suggestion-chips">
+                <button class="chip" data-q="Summarize this document">Summarize this document</button>
+                <button class="chip" data-q="What are the key points?">What are the key points?</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Messages container -->
+        <div id="messagesContainer" class="messages-container" style="display:none;"></div>
+
+        <!-- Typing indicator -->
+        <div id="typingIndicator" class="typing-indicator" style="display:none;">
+          <div class="typing-avatar">
+            <span>🧠</span>
+          </div>
+          <div class="typing-content">
+            <span class="typing-label">DocMind</span>
+            <div class="typing-dots">
+              <div class="t-dot"></div>
+              <div class="t-dot"></div>
+              <div class="t-dot"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Input bar -->
+      <footer class="input-bar">
+        <div class="input-bar-inner">
+          <div class="input-wrapper">
+            <textarea 
+              id="chatInput" 
+              class="chat-input" 
+              placeholder="Ask a question about your document…" 
+              rows="1"
+              aria-label="Chat message input"
+            ></textarea>
+            <button id="sendBtn" class="send-btn" aria-label="Send message" disabled>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+            </button>
+          </div>
+          <div class="input-footer">
+            <span class="input-hint">Enter to send · Shift+Enter for newline</span>
+            <span class="input-model">gemini-2.5-flash</span>
+          </div>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <!-- Image lightbox -->
+  <div id="lightbox" class="lightbox" style="display:none;">
+    <button class="lightbox-close" id="lightboxClose" aria-label="Close lightbox">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <img id="lightboxImg" class="lightbox-img" alt="Enlarged document image">
+    <div id="lightboxCaption" class="lightbox-caption"></div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
