@@ -330,6 +330,9 @@ export function renderDocumentList(documents, activeId, onSelect, onDelete) {
     el.addEventListener('click', (e) => {
       if (e.target.closest('.doc-delete')) return;
       onSelect(el.dataset.id);
+      if (window.innerWidth < 768) {
+        closeSidebar();
+      }
     });
   });
 

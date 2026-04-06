@@ -1,6 +1,9 @@
 # DocMind — AI Document Agent
 
-**DocMind** is a high-performance, real-time AI document analysis agent. Built with a modern, glassmorphic UI, client-side indexing, and powered by Google's **Gemini 2.5 Flash**, it allows users to chat with their complex PDF and PowerPoint documents with sub-second latency. No proprietary paid API keys required.
+**DocMind** is a premium RAG AI agent using Node.js and Gemini Flash. It features client-side PDF/PPTX indexing for privacy and sub-second latency, integrating vision extraction and interactive, responsive WebGL 3D backgrounds.
+
+### How it Works
+Users upload documents which are instantly parsed and indexed locally. Custom semantic search then retrieves relevant text chunks and images, feeding them to the Gemini AI for streaming, context-aware chatbot responses.
 
 ## Features
 
